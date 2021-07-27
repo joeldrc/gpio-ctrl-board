@@ -122,6 +122,8 @@ void htmlPage(auto client) {
 
   htmlPage += html_1;
 
+  htmlPage += operationMode;
+
   // Footer
   htmlPage += "<p><input type=\"button\" value=\"Refresh\" onclick = \"location.href='/?refresh'\"></p>";
   htmlPage += "<br><footer><p><br>Version: ";

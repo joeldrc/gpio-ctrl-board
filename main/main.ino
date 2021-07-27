@@ -30,11 +30,7 @@
 uint8_t boardSN = 0;
 uint8_t mac[] = { 0xDA, 0xAD, 0xBE, 0xEF, 0xFE, 0xE0 };
 
-// 0: read only
-// 1: simulate SCY and ECY
-// 2: simulate SCY, INJ and ECY
-// 3: simulate SCY, CALSTATR, CALSTOP, INJ and ECY
-// 4: manual mode
+
 int32_t operationMode = 0;
 int32_t previousOperationMode = -1;
 
@@ -154,7 +150,7 @@ void setup() {
   digitalWriteFast(StsLedGr, LOW);
 
   // Digital outputs
-  for (uint8_t i=0; i < Pbit; i++) {
+  for (uint8_t i = 0; i < Pbit; i++) {
     pinMode(P1_A[i], OUTPUT);
     pinMode(P1_B[i], OUTPUT);
     pinMode(P2_A[i], OUTPUT);
@@ -169,6 +165,8 @@ void setup() {
   // Start serial
   Serial.begin(9600);
   Serial.println("BTMS mcu serial monitor");
+
+  Serial1.begin(9600);
 
   // Read hardware switch
   Serial.print("Setting switch 1,2: ");
@@ -191,17 +189,17 @@ void loop() {
   // Check buttons
   if (pushbutton1.update()) {
     if (pushbutton1.fallingEdge()) {
-
+      operationMode++;
     }
   }
   if (pushbutton2.update()) {
     if (pushbutton2.fallingEdge()) {
-
+      operationMode = 0;
     }
   }
   if (pushbutton3.update()) {
     if (pushbutton3.fallingEdge()) {
-
+      operationMode--;
     }
   }
 
