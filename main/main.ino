@@ -30,12 +30,10 @@
 uint8_t boardSN = 0;
 uint8_t mac[] = { 0xDA, 0xAD, 0xBE, 0xEF, 0xFE, 0xE0 };
 
-
-int32_t operationMode = 0;
-int32_t previousOperationMode = -1;
-
-
-volatile float cpuTemp = 0.0;
+uint8_t P1A_val = 0;
+uint8_t P1B_val = 0;
+uint8_t P2A_val = 0;
+uint8_t P2B_val = 0;
 
 
 // button object
@@ -43,6 +41,8 @@ Bounce pushbutton1 = Bounce(BTN1, 10);  // 10 ms debounce
 Bounce pushbutton2 = Bounce(BTN2, 10);  // 10 ms debounce
 Bounce pushbutton3 = Bounce(BTN3, 10);  // 10 ms debounce
 
+
+volatile float cpuTemp = 0.0;
 
 // mcu temperature
 extern float tempmonGetTemp(void);
@@ -90,46 +90,85 @@ void ctrlEthernetThread() {
 }
 
 
+String decodeData(String receivedData) {
+  int valueReceived = -1;
+  String returnString = "";
+
+  char cmdReceived = receivedData.charAt(0);
+
+  if (receivedData.length() < 5 && receivedData.length() > 1) {
+    valueReceived = receivedData.substring(1, receivedData.length()).toInt();
+  }
+
+  switch (cmdReceived) {
+    case 'a': {
+        if (valueReceived >= 0 && valueReceived <= 255) {
+          P1A_val = valueReceived;
+        }
+        returnString += "PORT1A:";
+        returnString += P1A_val;
+      }
+      break;
+    case 'b': {
+        if (valueReceived >= 0 && valueReceived <= 255) {
+          P1B_val = valueReceived;
+        }
+        returnString += "PORT1B:";
+        returnString += P1B_val;
+      }
+      break;
+    case 'c': {
+        if (valueReceived >= 0 && valueReceived <= 255) {
+          P2A_val = valueReceived;
+        }
+        returnString += "PORT2A:";
+        returnString += P2A_val;
+      }
+      break;
+    case 'd': {
+        if (valueReceived >= 0 && valueReceived <= 255) {
+          P2B_val = valueReceived;
+        }
+        returnString += "PORT2B:";
+        returnString += P2B_val;
+      }
+      break;
+  }
+
+  // Write Ports
+  for (uint8_t i = 0; i < 8; i++) {
+    digitalWriteFast(P1A[i], bit_test(i, P1A_val));
+    digitalWriteFast(P1B[i], bit_test(i, P1B_val));
+    digitalWriteFast(P2A[i], bit_test(i, P2A_val));
+    digitalWriteFast(P2B[i], bit_test(i, P2B_val));
+  }
+
+  return returnString;
+}
+
+
 void heartBeatThread() {
   while (1) {
     // read CPU temperature
     cpuTemp = tempmonGetTemp();
 
-    threads.delay(240);
+    if (Serial.available() > 0) {
+      String receivedData = Serial.readStringUntil('\n');
+      Serial.println(decodeData(receivedData));
+    }
+
+    threads.delay(100);
     threads.yield();
   }
 }
 
 
-void selectOperationMode() {
-  // operationMode selection
-  if (previousOperationMode != operationMode) {
-    switch (operationMode) {
-      case 1: {
-
-        }
-        break;
-      case 2: {
-
-        }
-        break;
-      case 3: {
-
-        }
-        break;
-      case 4: {
-
-        }
-        break;
-      default: {
-
-          operationMode = 0;
-        }
-        break;
-    }
-    //Serial.print("Operation mode: ");
-    //Serial.println(operationMode);
-    previousOperationMode = operationMode;
+bool bit_test(uint8_t bit, uint8_t byte) {
+  if ((byte & (1 << bit)) > 0) {
+    return 1;
+  }
+  else {
+    return 0;
   }
 }
 
@@ -151,15 +190,15 @@ void setup() {
 
   // Digital outputs
   for (uint8_t i = 0; i < Pbit; i++) {
-    pinMode(P1_A[i], OUTPUT);
-    pinMode(P1_B[i], OUTPUT);
-    pinMode(P2_A[i], OUTPUT);
-    pinMode(P2_A[i], OUTPUT);
+    pinMode(P1A[i], OUTPUT);
+    pinMode(P1B[i], OUTPUT);
+    pinMode(P2A[i], OUTPUT);
+    pinMode(P2B[i], OUTPUT);
 
-    digitalWriteFast(P1_A[i], HIGH);
-    digitalWriteFast(P1_B[i], HIGH);
-    digitalWriteFast(P2_A[i], HIGH);
-    digitalWriteFast(P2_A[i], HIGH);
+    digitalWriteFast(P1A[i], LOW);
+    digitalWriteFast(P1B[i], LOW);
+    digitalWriteFast(P2A[i], LOW);
+    digitalWriteFast(P2B[i], LOW);
   }
 
   // Start serial
@@ -189,21 +228,19 @@ void loop() {
   // Check buttons
   if (pushbutton1.update()) {
     if (pushbutton1.fallingEdge()) {
-      operationMode++;
+
     }
   }
   if (pushbutton2.update()) {
     if (pushbutton2.fallingEdge()) {
-      operationMode = 0;
+
     }
   }
   if (pushbutton3.update()) {
     if (pushbutton3.fallingEdge()) {
-      operationMode--;
+
     }
   }
-
-  //selectOperationMode();
 
   // Handle webServer
   handleWebServer();

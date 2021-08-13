@@ -1,5 +1,7 @@
 
 
+// command to send: portVal=a255&portVal=b255&portVal=c255&portVal=d255&
+
 const char softwareVersion[] = "1.00";
 const char softwareUpdate[] = "07.2021";
 
@@ -23,34 +25,35 @@ void ethernetConfig_thread() {
   // start the server
   server.begin();
 
-  Serial.print("MAC: ");
-  for (byte octet = 0; octet < 6; octet++) {
+  /*
+    Serial.print("MAC: ");
+    for (byte octet = 0; octet < 6; octet++) {
     Serial.print(mac[octet], HEX);
     if (octet < 5) {
       Serial.print('-');
     }
-  }
-  Serial.println();
-  Serial.print("IP: ");
-  Serial.println(Ethernet.localIP());
+    }
+    Serial.println();
+    Serial.print("IP: ");
+    Serial.println(Ethernet.localIP());
+  */
 }
 
 
 int ctrlConnection() {
   auto link = Ethernet.linkStatus();
 
-  Serial.print("Link status: ");
   switch (link) {
     case LinkON:
-      Serial.println("connected.");
+      //Serial.println("Link status: connected.");
       return 1;
       break;
     case Unknown:
-      Serial.println("unknown.");
+      Serial.println("Link status: unknown.");
       return -1;
       break;
     case LinkOFF:
-      Serial.println("not connected.");
+      Serial.println("Link status: not connected.");
       return 0;
       break;
     default: {
@@ -98,31 +101,64 @@ function addOptionsFunction() {
 )rawliteral";
 
 
-uint32_t httpFilterString(String httpRqst, String request){
-  int posVal = httpRqst.indexOf('=', httpRqst.indexOf(request));
-  int endNumber = httpRqst.indexOf(' ', posVal + 1);
+String httpFilterString(String httpRqst, int index){
+  int posVal = httpRqst.indexOf('=', index);
+  int endNumber = httpRqst.indexOf('&', posVal + 1);
   //Serial.println(httpRqst);
-  String subString = httpRequest.substring(posVal + 1, endNumber);
-  Serial.println(subString.toInt());
-  return subString.toInt();  
+  String subString = httpRqst.substring(posVal + 1, endNumber);
+  
+  //Serial.println(subString.toInt());
+  //return subString.toInt();  
+  return subString;
+}
+
+
+String findInHttpRequest(String httpRqst, String request){
+  
 }
 
 
 void htmlPage(auto client) {
-  uint32_t tempVal = 0;
 
   // Start html
   String htmlPage = "";
   htmlPage += "HTTP/1.1 200 OK";
   htmlPage += "Content-Type: text/html";
-  htmlPage += "Connection: close";
   //htmlPage += "Refresh: 1";
   htmlPage += "Connection: close";
   htmlPage += "\n";
 
   htmlPage += html_1;
 
-  htmlPage += operationMode;
+  // check http requests
+//  if (httpRequest.indexOf("portVal=")  > 0) { 
+//    String val = decodeData(httpFilterString(httpRequest, "portVal="));
+//    Serial.println(val);
+//  }
+
+  bool checkRequest = true;
+  uint8_t indexVal = 0;  
+  while(checkRequest){
+    int indexFound = httpRequest.indexOf("portVal=", indexVal);
+    if (indexFound > 0) {
+      String val = decodeData(httpFilterString(httpRequest, indexFound));
+      Serial.println(val);
+      
+      indexVal = indexFound + 1; 
+    }   
+    else{
+      checkRequest = false;
+    }
+  }
+
+  htmlPage += decodeData("a");
+  htmlPage += "<br>";
+  htmlPage += decodeData("b");
+  htmlPage += "<br>";
+  htmlPage += decodeData("c");
+  htmlPage += "<br>";
+  htmlPage += decodeData("d");
+  htmlPage += "<br>";
 
   // Footer
   htmlPage += "<p><input type=\"button\" value=\"Refresh\" onclick = \"location.href='/?refresh'\"></p>";
@@ -144,7 +180,7 @@ void handleWebServer() {
   // listen for incoming clients
   EthernetClient client = server.available();
   if (client) {
-    Serial.println("New client.");
+    //Serial.println("New client.");
 
     // an http request ends with a blank line
     boolean currentLineIsBlank = true;
@@ -178,10 +214,10 @@ void handleWebServer() {
     }
 
     // give the web browser time to receive the data
-    delay(1);
+    //delay(1);
 
     // close the connection:
     client.stop();
-    Serial.println("Client disconnected.");
+    //Serial.println("Client disconnected.");
   }
 }
