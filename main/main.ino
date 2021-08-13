@@ -165,10 +165,10 @@ void heartBeatThread() {
 
 bool bit_test(uint8_t bit, uint8_t byte) {
   if ((byte & (1 << bit)) > 0) {
-    return 1;
+    return 0;
   }
   else {
-    return 0;
+    return 1;
   }
 }
 
@@ -195,10 +195,10 @@ void setup() {
     pinMode(P2A[i], OUTPUT);
     pinMode(P2B[i], OUTPUT);
 
-    digitalWriteFast(P1A[i], LOW);
-    digitalWriteFast(P1B[i], LOW);
-    digitalWriteFast(P2A[i], LOW);
-    digitalWriteFast(P2B[i], LOW);
+    digitalWriteFast(P1A[i], HIGH);
+    digitalWriteFast(P1B[i], HIGH);
+    digitalWriteFast(P2A[i], HIGH);
+    digitalWriteFast(P2B[i], HIGH);
   }
 
   // Start serial

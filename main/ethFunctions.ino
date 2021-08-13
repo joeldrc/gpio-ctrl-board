@@ -214,7 +214,7 @@ void handleWebServer() {
     }
 
     // give the web browser time to receive the data
-    //delay(1);
+    delay(1);
 
     // close the connection:
     client.stop();
