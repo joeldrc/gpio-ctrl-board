@@ -2,59 +2,84 @@
 
 // command to send: portVal=a255&portVal=b255&portVal=c255&portVal=d255&
 
-const char softwareVersion[] = "1.00";
-const char softwareUpdate[] = "07.2021";
 
-const char asciiFilledSquare[] = "&#9608;"; //'█';
-const char asciiSpace[] = "_";              //'_';
-
-
-// size of buffer to store HTTP requests
-const uint8_t REQUEST_BUFFER = 100;
-String httpRequest = ""; // HTTP request string
+String request = "";
+unsigned int count = 0;
+String header = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
 
 
-EthernetServer server(80);
+const char html[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'/>
+  <meta charset='utf-8'>
+  <style>
+    body {font-size:100%;} 
+    #main {display: table; margin: auto;  padding: 0 10px 0 10px; } 
+    h2 {text-align:center; } 
+    p { text-align:center; }
+  </style>
 
-
-void ethernetConfig_thread() {
-  if (Ethernet.begin(mac, 60000, 4000) == 0) {
-    Serial.println("Failed to configure Ethernet using DHCP");
-  }
-
-  // start the server
-  server.begin();
-
-  /*
-    Serial.print("MAC: ");
-    for (byte octet = 0; octet < 6; octet++) {
-    Serial.print(mac[octet], HEX);
-    if (octet < 5) {
-      Serial.print('-');
+  <script> 
+    function updateCount() 
+    {  
+       ajaxLoad('getValues'); 
     }
+
+
+    var ajaxRequest = null;
+    if (window.XMLHttpRequest)  { ajaxRequest =new XMLHttpRequest(); }
+    else                        { ajaxRequest =new ActiveXObject("Microsoft.XMLHTTP"); }
+
+    function ajaxLoad(ajaxURL)
+    {
+      if(!ajaxRequest){ alert('AJAX is not supported.'); return; }
+
+      ajaxRequest.open('GET',ajaxURL,true);
+      ajaxRequest.onreadystatechange = function()
+      {
+        if(ajaxRequest.readyState == 4 && ajaxRequest.status==200)
+        {
+          var ajaxResult = ajaxRequest.responseText;
+          document.getElementById('count_P').innerHTML = ajaxResult;
+        }
+      }
+      ajaxRequest.send();
     }
-    Serial.println();
-    Serial.print("IP: ");
-    Serial.println(Ethernet.localIP());
-  */
-}
+
+    setInterval(updateCount, 500);
+
+  </script>
+  <title>Auto Update Example Using Javascript 2</title>
+ </head>
+
+ <body>
+   <div id='main'>
+     <h2>Auto Update Example Using Javascript 2</h2>
+     <div id='count_DIV'> 
+       <p id='count_P'>Count = 0</p>
+     </div>
+   </div> 
+ </body>
+</html>
+)rawliteral"; 
 
 
 int ctrlConnection() {
   auto link = Ethernet.linkStatus();
-
   switch (link) {
-    case LinkON:
-      //Serial.println("Link status: connected.");
-      return 1;
+    case LinkON: {
+        return 1;
+      }
       break;
-    case Unknown:
-      Serial.println("Link status: unknown.");
-      return -1;
+    case Unknown: {
+        return -1;
+      }
       break;
-    case LinkOFF:
-      Serial.println("Link status: not connected.");
-      return 0;
+    case LinkOFF: {
+        return 0;
+      }
       break;
     default: {
         return -2;
@@ -63,159 +88,71 @@ int ctrlConnection() {
 }
 
 
-const char html_1[] PROGMEM = R"rawliteral(
-<!DOCTYPE html>
-<html>
-<head>
-<title>BTMS MCU</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-* {
-  box-sizing: border-box;
-}
-th, td {
-  padding: 3px;
-}
-.resizable {
-  resize: both;
-  overflow: scroll;
-}
-footer {
-  text-align: center;
-  padding: 3px;
-  background-color: LightBlue;
-}
-</style>
-<script>
-function addOptionsFunction() {
-  var x = document.getElementById("timingPanel");
-  if (x.style.display === "none") {
-    x.style.display = "block";
-  } else {
-    x.style.display = "none";
-  }
-}
-</script>
-</head>
-<body style="font-family:Verdana;color: DarkSlateGray;">
-)rawliteral";
-
-
-String httpFilterString(String httpRqst, int index){
+String httpFilterString(String httpRqst, int index) {
   int posVal = httpRqst.indexOf('=', index);
   int endNumber = httpRqst.indexOf('&', posVal + 1);
   //Serial.println(httpRqst);
   String subString = httpRqst.substring(posVal + 1, endNumber);
-  
+
   //Serial.println(subString.toInt());
-  //return subString.toInt();  
+  //return subString.toInt();
   return subString;
 }
 
+void clientResponse(auto client){
+  client.print(header);
+  client.print("Count="); 
+  client.print(count); 
 
-String findInHttpRequest(String httpRqst, String request){
-  
-}
+  client.print(" portA="); 
+  client.print(P1A_val); 
+  client.print(" portB="); 
+  client.print(P1B_val); 
+  client.print(" portC="); 
+  client.print(P2A_val); 
+  client.print(" portD="); 
+  client.print(P2B_val); 
 
-
-void htmlPage(auto client) {
-
-  // Start html
-  String htmlPage = "";
-  htmlPage += "HTTP/1.1 200 OK";
-  htmlPage += "Content-Type: text/html";
-  //htmlPage += "Refresh: 1";
-  htmlPage += "Connection: close";
-  htmlPage += "\n";
-
-  htmlPage += html_1;
-
-  // check http requests
-//  if (httpRequest.indexOf("portVal=")  > 0) { 
-//    String val = decodeData(httpFilterString(httpRequest, "portVal="));
-//    Serial.println(val);
-//  }
-
-  bool checkRequest = true;
-  uint8_t indexVal = 0;  
-  while(checkRequest){
-    int indexFound = httpRequest.indexOf("portVal=", indexVal);
-    if (indexFound > 0) {
-      String val = decodeData(httpFilterString(httpRequest, indexFound));
-      Serial.println(val);
-      
-      indexVal = indexFound + 1; 
-    }   
-    else{
-      checkRequest = false;
-    }
-  }
-
-  htmlPage += decodeData("a");
-  htmlPage += "<br>";
-  htmlPage += decodeData("b");
-  htmlPage += "<br>";
-  htmlPage += decodeData("c");
-  htmlPage += "<br>";
-  htmlPage += decodeData("d");
-  htmlPage += "<br>";
-
-  // Footer
-  htmlPage += "<p><input type=\"button\" value=\"Refresh\" onclick = \"location.href='/?refresh'\"></p>";
-  htmlPage += "<br><footer><p><br>Version: ";
-  htmlPage += softwareVersion;
-  htmlPage += "<br><br>JD ";
-  htmlPage += softwareUpdate;
-  htmlPage += "<br><br></p></footer></body></html>";
-
-  // send html page
-  client.println(htmlPage);
-  
-  // close client connection
-  client.close();
+  Serial.print("Count=");
+  Serial.println(count);
 }
 
 
 void handleWebServer() {
   // listen for incoming clients
   EthernetClient client = server.available();
-  if (client) {
-    //Serial.println("New client.");
 
-    // an http request ends with a blank line
-    boolean currentLineIsBlank = true;
-    while (client.connected()) {
-      if (client.available()) {
-        char c = client.read();
-        //Serial.write(c);
-        if (httpRequest.length() < REQUEST_BUFFER) {
-          httpRequest += c;
-        }
+  if (client.available()) {  
+    //Serial.println("client available");
+     
+    // Read the first line of the request
+    request = client.readStringUntil('\r');
 
-        // if you've gotten to the end of the line (received a newline
-        // character) and the line is blank, the http request has ended,
-        // so you can send a reply
-        if (c == '\n' && currentLineIsBlank) {
-
-          htmlPage(client);
-
-          // reset buffer
-          httpRequest = "";
-          break;
-        }
-        if (c == '\n') {
-          // start new line
-          currentLineIsBlank = true;
-        } else if (c != '\r') {
-          // character received on the current line
-          currentLineIsBlank = false;
-        }
-      }
+    int indexFound = request.indexOf("portVal=");
+    if (indexFound > 0) {
+      String val = decodeData(httpFilterString(request, indexFound));
+      //Serial.println(val);
+      clientResponse(client);
+    }   
+    else if (request.indexOf("getValues") > 0 ){ 
+      count ++;
+      clientResponse(client);
+    } 
+    else{
+      client.flush();
+      client.print(header);
+      client.print(html); 
+      count=0;
     }
-
+  
+    // close client connection
+    client.close();
+  
     // give the web browser time to receive the data
-    delay(1);
+    //delay(1);    
+  }
 
+  if (!client.connected()) {
     // close the connection:
     client.stop();
     //Serial.println("Client disconnected.");

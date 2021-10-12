@@ -1,6 +1,6 @@
 /**
  ******************************************************************************
-  @file    BTMS mcu
+  @file    mcu
   @author  Joel Daricou  <joel.daricou@cern.ch>
   @brief   gpio-ctrl-board
  ******************************************************************************
@@ -36,6 +36,9 @@ uint8_t P2A_val = 0;
 uint8_t P2B_val = 0;
 
 
+EthernetServer server(80);
+
+
 // button object
 Bounce pushbutton1 = Bounce(BTN1, 10);  // 10 ms debounce
 Bounce pushbutton2 = Bounce(BTN2, 10);  // 10 ms debounce
@@ -43,6 +46,7 @@ Bounce pushbutton3 = Bounce(BTN3, 10);  // 10 ms debounce
 
 
 volatile float cpuTemp = 0.0;
+//volatile int linkStat = 0;
 
 // mcu temperature
 extern float tempmonGetTemp(void);
@@ -61,30 +65,51 @@ uint8_t readSettingSwitch(uint8_t pinA, uint8_t pinB) {
 
 
 void ctrlEthernetThread() {
+  int linkStat = 0;
   while (1) {
-    int linkStatusLed = ctrlConnection();
-    switch (linkStatusLed) {
-      case 1: {
-          // connected (led green)
-          digitalWriteFast(StsLedGr, LOW);
-          digitalWriteFast(StsLedOr, HIGH);
-        }
-        break;
-      case -1: {
-          // unknown (led orange blinking)
-          digitalWriteFast(StsLedGr, HIGH);
-          digitalWriteFast(StsLedOr, LOW);
-        }
-        break;
-      default: {
-          // not connected (led off)
-          digitalWriteFast(StsLedGr, HIGH);
-          digitalWriteFast(StsLedOr, HIGH);
-        }
-        break;
+    int tmpLinkStat = ctrlConnection();
+    if (linkStat != tmpLinkStat) {
+      linkStat = tmpLinkStat;
+
+      switch (linkStat) {
+        case 1: {
+            Serial.println("Link status: connected.");
+
+            // connected (led green)
+            digitalWriteFast(StsLedGr, LOW);
+            digitalWriteFast(StsLedOr, HIGH);
+
+            Serial.print("MAC: ");
+            for (byte octet = 0; octet < 6; octet++) {
+              Serial.print(mac[octet], HEX);
+              if (octet < 5) {
+                Serial.print('-');
+              }
+            }
+            Serial.println();
+            Serial.print("IP: ");
+            Serial.println(Ethernet.localIP());
+          }
+          break;
+        case -1: {
+            Serial.println("Link status: unknown.");
+
+            // unknown (led orange blinking)
+            digitalWriteFast(StsLedGr, HIGH);
+            digitalWriteFast(StsLedOr, LOW);
+          }
+          break;
+        default: {
+            Serial.println("Link status: not connected.");
+
+            // not connected (led off)
+            digitalWriteFast(StsLedGr, HIGH);
+            digitalWriteFast(StsLedOr, HIGH);
+          }
+          break;
+      }
     }
-    ethernetConfig_thread();
-    threads.delay(2000);
+    threads.delay(1000);
     threads.yield();
   }
 }
@@ -207,6 +232,17 @@ void setup() {
 
   Serial1.begin(9600);
 
+  // Set mac address
+  mac[5] += boardSN;
+
+  // Start ethernet
+  if (Ethernet.begin(mac, 60000, 4000) == 0) {
+    Serial.println("Failed to configure Ethernet using DHCP");
+  }
+
+  // start the server
+  server.begin();
+
   // Read hardware switch
   Serial.print("Setting switch 1,2: ");
   Serial.print(readSettingSwitch(SW1, SW2));
@@ -214,9 +250,6 @@ void setup() {
 
   // Set board serial number
   boardSN = readSettingSwitch(SW1, SW2);
-
-  // Set mac address
-  mac[5] += boardSN;
 
   // Start thread
   threads.addThread(ctrlEthernetThread, 1);
@@ -228,17 +261,14 @@ void loop() {
   // Check buttons
   if (pushbutton1.update()) {
     if (pushbutton1.fallingEdge()) {
-
     }
   }
   if (pushbutton2.update()) {
     if (pushbutton2.fallingEdge()) {
-
     }
   }
   if (pushbutton3.update()) {
     if (pushbutton3.fallingEdge()) {
-
     }
   }
 

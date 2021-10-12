@@ -1,5 +1,8 @@
 
 
+const char softwareVersion[] = "1.00";
+const char softwareUpdate[] = "10.2021";
+
 const uint8_t Pbit = 8;
 
 // pin assignment
