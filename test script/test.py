@@ -13,7 +13,7 @@ def queryValues(url):
 def port(val):
     for i in range(256):        
         queryValues('http://btms-mcu-0.cern.ch/portVal='+ val + str(i) + '&')
-        time.sleep(0.01)
+        time.sleep(0.1)
  
 
 print("Ethernet remote control v1 \nTerminal reading \n")
