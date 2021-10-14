@@ -32,7 +32,7 @@ def updatePort(txt):
     print(txt + ' -> setted')
       
 
-print("Ethernet remote control v1 \n--- JD 10/2021 ---\n>>> CTRL attenuator <<<\n")
+print("---\nEthernet remote control v1\n---\nJD 10/2021\n---\n\n>>> CTRL attenuator <<<\n")
 print("CMD list: \n- <on-off> \n- <a/b><0-6> [dB steps] \n- read [read settings]\n")
 
 while (True):
