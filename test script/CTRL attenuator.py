@@ -29,85 +29,145 @@ def updatePort(txt):
     portWrite('b', portB)
     portWrite('c', portC)
     portWrite('d', portD)
-    print(txt + ' -> setted')
+    print(txt, '-> done')
       
 
 print("---\nEthernet remote control v1\n---\nJD 10/2021\n---\n\n>>> CTRL attenuator <<<\n")
-print("CMD list: \n- <on-off> \n- <a/b><0-6> [dB steps] \n- read [read settings]\n")
+print("CMD list: \n- <cal-amp> -<on-off> \n- <cal-amp> -<a/b><0-6> [dB steps] \n- read [read settings]\n")
 
 while (True):
-    cmd = input('>>> ')
-    cmd = cmd.split(' ')
-    
-    for i in range(len(cmd)):
-       
-        if(cmd[i] == 'on'):       
+    cmd = input('> ')
+    #cmd = cmd.split(' ") >= 0)
+
+    if(cmd.find("amp") >= 0):
+                  
+        if(cmd.find("a0") >= 0):
+            portC &= 0b10000000
+            updatePort(cmd)
+            
+        elif(cmd.find("a1") >= 0):
+            portC |= 0b00000001
+            updatePort(cmd)
+            
+        elif(cmd.find("a2") >= 0):
+            portC |= 0b00000010
+            updatePort(cmd)
+
+        elif(cmd.find("a3") >= 0):
+            portC |= 0b00000100
+            updatePort(cmd)
+            
+        elif(cmd.find("a4") >= 0):
+            portC |= 0b00001000
+            updatePort(cmd)
+            
+        elif(cmd.find("a5") >= 0):
+            portC |= 0b00010000
+            updatePort(cmd)
+
+        elif(cmd.find("a6") >= 0):
+            portC |= 0b01000000
+            updatePort(cmd)
+
+        elif(cmd.find("b0") >= 0):
+            portD &= 0b10000000
+            updatePort(cmd)
+            
+        elif(cmd.find("a1") >= 0):
+            portD |= 0b00000001
+            updatePort(cmd)
+            
+        elif(cmd.find("a2") >= 0):
+            portD |= 0b00000010
+            updatePort(cmd)
+
+        elif(cmd.find("a3") >= 0):
+            portD |= 0b00000100
+            updatePort(cmd)
+            
+        elif(cmd.find("a4") >= 0):
+            portD |= 0b00001000
+            updatePort(cmd)
+            
+        elif(cmd.find("a5") >= 0):
+            portD |= 0b00010000
+            updatePort(cmd)
+
+        elif(cmd.find("a6") >= 0):
+            portD |= 0b01000000
+            updatePort(cmd)
+
+        
+    elif(cmd.find("cal") >= 0):
+        
+        if(cmd.find("on") >= 0):       
             portA |= 0b00000010
-            updatePort(cmd[i])
+            updatePort(cmd)
             
-        elif(cmd[i] == 'off'):
+        elif(cmd.find("off") >= 0):
             portA &= 0b11111101
-            updatePort(cmd[i])
+            updatePort(cmd)
             
-        elif(cmd[i] == 'a0'):
+        elif(cmd.find("a0") >= 0):
             portA &= 0b10101010
             portB &= 0b01011111
-            updatePort(cmd[i])
+            updatePort(cmd)
             
-        elif(cmd[i] == 'a1'):
+        elif(cmd.find("a1") >= 0):
             portA |= 0b00000001
-            updatePort(cmd[i])
+            updatePort(cmd)
             
-        elif(cmd[i] == 'a2'):
+        elif(cmd.find("a2") >= 0):
             portA |= 0b00000100
-            updatePort(cmd[i])
+            updatePort(cmd)
 
-        elif(cmd[i] == 'a3'):
+        elif(cmd.find("a3") >= 0):
             portA |= 0b00010000
-            updatePort(cmd[i])
+            updatePort(cmd)
             
-        elif(cmd[i] == 'a4'):
+        elif(cmd.find("a4") >= 0):
             portA |= 0b01000000
-            updatePort(cmd[i])
+            updatePort(cmd)
             
-        elif(cmd[i] == 'a5'):
+        elif(cmd.find("a5") >= 0):
             portB |= 0b10000000
-            updatePort(cmd[i])
+            updatePort(cmd)
 
-        elif(cmd[i] == 'a6'):
+        elif(cmd.find("a6") >= 0):
             portB |= 0b00100000
-            updatePort(cmd[i])
+            updatePort(cmd)
 
-        elif(cmd[i] == 'b0'):
+        elif(cmd.find("b0") >= 0):
             portB &= 0b10100000
-            updatePort(cmd[i])
+            updatePort(cmd)
             
-        elif(cmd[i] == 'b1'):
+        elif(cmd.find("b1") >= 0):
             portB |= 0b00000001
-            updatePort(cmd[i])
+            updatePort(cmd)
             
-        elif(cmd[i] == 'b2'):
+        elif(cmd.find("b2") >= 0):
             portB |= 0b00001000
-            updatePort(cmd[i])
+            updatePort(cmd)
 
-        elif(cmd[i] == 'b3'):
+        elif(cmd.find("b3") >= 0):
             portB |= 0b00000100
-            updatePort(cmd[i])
+            updatePort(cmd)
             
-        elif(cmd[i] == 'b4'):
+        elif(cmd.find("b4") >= 0):
             portB |= 0b00000010
-            updatePort(cmd[i])
+            updatePort(cmd)
             
-        elif(cmd[i] == 'b5'):
+        elif(cmd.find("b5") >= 0):
             portB |= 0b00010000
-            updatePort(cmd[i])
+            updatePort(cmd)
 
-        elif(cmd[i] == 'b6'):
+        elif(cmd.find("b6") >= 0):
             portB |= 0b01000000
-            updatePort(cmd[i])
+            updatePort(cmd)
 
-        elif(cmd[i] == 'read'):      
-            print(*queryValues(boardUrl + '/getValues'), sep = '\n')
-    
+
+    elif(cmd.find("read") >= 0):      
+        print(*queryValues(boardUrl + '/getValues'), sep = '\n')
+
      
 
