@@ -3,10 +3,45 @@ import requests
 
 
 boardUrl = "http://btms-mcu-0.cern.ch"
-portA = 0b00000000
-portB = 0b00000000
-portC = 0b00000000
-portD = 0b00000000
+
+# 'abc', portA, portB, portC, portD
+tableVal = [('amp a0', 0, 0, 0, 0),
+            ('amp a1', 0, 0, 0b00000001, 0),
+            ('amp a2', 0, 0, 0b00000010, 0),
+            ('amp a3', 0, 0, 0b00000100, 0),
+            ('amp a4', 0, 0, 0b00001000, 0),
+            ('amp a5', 0, 0, 0b00010000, 0),
+            ('amp a6', 0, 0, 0b00100000, 0),
+            #('amp b0', 0, 0, 0, 0),
+            ('amp b1', 0, 0, 0, 0b00000001),
+            ('amp b2', 0, 0, 0, 0b00000010),
+            ('amp b3', 0, 0, 0, 0b00000100),
+            ('amp b4', 0, 0, 0, 0b00001000),
+            ('amp b5', 0, 0, 0, 0b00010000),
+            ('amp b6', 0, 0, 0, 0b00100000),
+            #('cal b0', 0, 0, 0, 0),
+            ('cal on', 0b00000010, 0, 0, 0),
+            #('cal off', 0, 0, 0, 0),
+            #('cal a0', 0, 0, 0, 0),
+            ('cal a1', 0b00000001, 0, 0, 0),
+            ('cal a2', 0b00000100, 0, 0, 0),
+            ('cal a3', 0b00010000, 0, 0, 0),
+            ('cal a4', 0b01000000, 0, 0, 0),
+            ('cal a5', 0, 0b10000000, 0, 0),
+            ('cal a6', 0, 0b00100000, 0, 0),
+            #('cal b0', 0, 0, 0, 0),
+            ('cal b1', 0, 0b00000001, 0, 0),
+            ('cal b2', 0, 0b00001000, 0, 0),
+            ('cal b3', 0, 0b00000100, 0, 0),
+            ('cal b4', 0, 0b00000010, 0, 0),
+            ('cal b5', 0, 0b00010000, 0, 0),
+            ('cal b6', 0, 0b01000000, 0, 0),           
+            ]
+
+portA = 0
+portB = 0
+portC = 0
+portD = 0
 
 
 def queryValues(url):
@@ -22,7 +57,17 @@ def portWrite(port, val):
     queryValues(boardUrl + '/portVal='+ port + str(val) + '&')
       
       
-def updatePort(txt):
+def updatePort(index, txt):
+    global portA
+    global portB
+    global portC
+    global portD
+    
+    portA ^= tableVal[index][1]
+    portB ^= tableVal[index][2]
+    portC ^= tableVal[index][3]
+    portD ^= tableVal[index][4]
+    
     portWrite('a', portA)
     portWrite('b', portB)
     portWrite('c', portC)
@@ -30,160 +75,15 @@ def updatePort(txt):
     print(txt, '-> done')
       
 
-
-# reset the board
-updatePort(' ')
-
-print("---\nEthernet remote control v1\n---\nJD 10/2021\n---\n\n>>> CTRL attenuator <<<\n")
-print("CMD list: \n- <cal-amp> -<on-off> \n- <cal-amp> -<a/b><0-6> [dB steps] \n- read [read settings]\n")
-
-
-"""
-while (True):
-    cmd = input('> ')
-    #cmd = cmd.split(' ')
-    print(cmd)
-
-"""
-
-
 def setDevice(cmd):
-    global portA
-    global portB
-    global portC
-    global portD
-    
-    if(cmd.find("amp") >= 0):
-                  
-        if(cmd.find("a0") >= 0):
-            portC = 0
-            updatePort(cmd)
-            
-        elif(cmd.find("a1") >= 0):
-            portC ^= 0b00000001
-            updatePort(cmd)
-            
-        elif(cmd.find("a2") >= 0):
-            portC ^= 0b00000010
-            updatePort(cmd)
+    global tableVal
 
-        elif(cmd.find("a3") >= 0):
-            portC ^= 0b00000100
-            updatePort(cmd)
+    for i in range(len(tableVal)):
+        if(cmd == tableVal[i][0]):
+            updatePort(i, cmd)
+            return cmd
             
-        elif(cmd.find("a4") >= 0):
-            portC ^= 0b00001000
-            updatePort(cmd)
-            
-        elif(cmd.find("a5") >= 0):
-            portC ^= 0b00010000
-            updatePort(cmd)
-
-        elif(cmd.find("a6") >= 0):
-            portC ^= 0b00100000
-            updatePort(cmd)
-
-        elif(cmd.find("b0") >= 0):
-            portD = 0
-            updatePort(cmd)
-            
-        elif(cmd.find("b1") >= 0):
-            portD ^= 0b00000001
-            updatePort(cmd)
-            
-        elif(cmd.find("b2") >= 0):
-            portD ^= 0b00000010
-            updatePort(cmd)
-
-        elif(cmd.find("b3") >= 0):
-            portD ^= 0b00000100
-            updatePort(cmd)
-            
-        elif(cmd.find("b4") >= 0):
-            portD ^= 0b00001000
-            updatePort(cmd)
-            
-        elif(cmd.find("b5") >= 0):
-            portD ^= 0b00010000
-            updatePort(cmd)
-
-        elif(cmd.find("b6") >= 0):
-            portD ^= 0b00100000
-            updatePort(cmd)
-
-        return cmd
-
-        
-    elif(cmd.find("cal") >= 0):
-        
-        if(cmd.find("on") >= 0):       
-            portA ^= 0b00000010
-            updatePort(cmd)
-            
-        elif(cmd.find("off") >= 0):
-            portA &= 0b11111101
-            updatePort(cmd)
-            
-        elif(cmd.find("a0") >= 0):
-            portA &= 0b10101010
-            portB &= 0b01011111
-            updatePort(cmd)
-            
-        elif(cmd.find("a1") >= 0):
-            portA ^= 0b00000001
-            updatePort(cmd)
-            
-        elif(cmd.find("a2") >= 0):
-            portA ^= 0b00000100
-            updatePort(cmd)
-
-        elif(cmd.find("a3") >= 0):
-            portA ^= 0b00010000
-            updatePort(cmd)
-            
-        elif(cmd.find("a4") >= 0):
-            portA ^= 0b01000000
-            updatePort(cmd)
-            
-        elif(cmd.find("a5") >= 0):
-            portB ^= 0b10000000
-            updatePort(cmd)
-
-        elif(cmd.find("a6") >= 0):
-            portB ^= 0b00100000
-            updatePort(cmd)
-
-        elif(cmd.find("b0") >= 0):
-            portB ^= 0b10100000
-            updatePort(cmd)
-            
-        elif(cmd.find("b1") >= 0):
-            portB ^= 0b00000001
-            updatePort(cmd)
-            
-        elif(cmd.find("b2") >= 0):
-            portB ^= 0b00001000
-            updatePort(cmd)
-
-        elif(cmd.find("b3") >= 0):
-            portB ^= 0b00000100
-            updatePort(cmd)
-            
-        elif(cmd.find("b4") >= 0):
-            portB ^= 0b00000010
-            updatePort(cmd)
-            
-        elif(cmd.find("b5") >= 0):
-            portB ^= 0b00010000
-            updatePort(cmd)
-
-        elif(cmd.find("b6") >= 0):
-            portB ^= 0b01000000
-            updatePort(cmd)
-
-        return cmd
-
-    elif(cmd.find("read") >= 0):      
+    if(cmd.find("read") >= 0):      
         return queryValues(boardUrl + '/getValues')
 
 
@@ -266,8 +166,14 @@ class Window(Frame):
         print(txt)
         self.output.delete('1.0', END)
         self.output.insert(END, txt)
-        
-        
+
+
+# reset the board
+updatePort(0, ' ')
+
+print("---\nEthernet remote control v1\n---\nJD 10/2021\n---\n\n>>> CTRL attenuator <<<\n")
+print("CMD list: \n- <cal-amp> -<on-off> \n- <cal-amp> -<a/b><0-6> [dB steps] \n- read [read settings]\n")
+         
 root = Tk()
 app = Window(root)
 root.wm_title("CTRL attenuator")
