@@ -30,6 +30,10 @@ def updatePort(txt):
     print(txt, '-> done')
       
 
+
+# reset the board
+updatePort(' ')
+
 print("---\nEthernet remote control v1\n---\nJD 10/2021\n---\n\n>>> CTRL attenuator <<<\n")
 print("CMD list: \n- <cal-amp> -<on-off> \n- <cal-amp> -<a/b><0-6> [dB steps] \n- read [read settings]\n")
 
@@ -52,7 +56,7 @@ def setDevice(cmd):
     if(cmd.find("amp") >= 0):
                   
         if(cmd.find("a0") >= 0):
-            portC ^= 0b10000000
+            portC = 0
             updatePort(cmd)
             
         elif(cmd.find("a1") >= 0):
@@ -76,11 +80,11 @@ def setDevice(cmd):
             updatePort(cmd)
 
         elif(cmd.find("a6") >= 0):
-            portC ^= 0b01000000
+            portC ^= 0b00100000
             updatePort(cmd)
 
         elif(cmd.find("b0") >= 0):
-            portD &= 0b10000000
+            portD = 0
             updatePort(cmd)
             
         elif(cmd.find("b1") >= 0):
@@ -104,7 +108,7 @@ def setDevice(cmd):
             updatePort(cmd)
 
         elif(cmd.find("b6") >= 0):
-            portD ^= 0b01000000
+            portD ^= 0b00100000
             updatePort(cmd)
 
         return cmd
@@ -150,7 +154,7 @@ def setDevice(cmd):
             updatePort(cmd)
 
         elif(cmd.find("b0") >= 0):
-            portB &= 0b10100000
+            portB ^= 0b10100000
             updatePort(cmd)
             
         elif(cmd.find("b1") >= 0):
