@@ -82,7 +82,7 @@ def setDevice(cmd):
 
     print(cmd)
     for i in range(len(tableVal)):
-        if(cmd == "read"):
+        if(cmd == "READ"):
             return queryValues(boardUrl + '/getValues')
         
         elif(cmd == tableVal[i][0]):
