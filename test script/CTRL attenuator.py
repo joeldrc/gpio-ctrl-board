@@ -64,9 +64,12 @@ def queryValues(url):
 
 
 def portWrite(port, val):
-    queryValues(boardUrl + '/portVal='+ port + str(val) + '&')
+    try:
+        queryValues(boardUrl + '/portVal='+ port + str(val) + '&')
+    except:
+        print("Impossible to connect")
 
-
+    
 def updatePort(index, txt):
     global portA
     global portB
@@ -77,13 +80,13 @@ def updatePort(index, txt):
     portB ^= tableVal[index][2]
     portC ^= tableVal[index][3]
     portD ^= tableVal[index][4]
-
+  
     portWrite('a', portA)
     portWrite('b', portB)
     portWrite('c', portC)
     portWrite('d', portD)
     print(txt, '-> done')
-
+    
 
 def setDevice(cmd):
     global tableVal
@@ -129,6 +132,7 @@ class Window(Frame):
         #self.read = Button(self, text=tableVal[26][0], command=lambda:self.setCmd(26))
         self.output = Text(self, height = 5, width = 25, bg = "white")
         self.sendBtn = Button(self, text="Send", command=lambda:setDevice(self.output.get("1.0", "end-1c")))
+        self.result = Text(self, height = 5, width = 25, bg = "white")
         exitButton = Button(self, text="Exit", command=self.clickExitButton)
 
         # place buttons
@@ -139,8 +143,9 @@ class Window(Frame):
         self.output.pack(side = TOP)
         self.sendBtn.pack(side = TOP)
         exitButton.pack(side = BOTTOM)
+        self.result.pack(side = BOTTOM)
 
-
+        
     def clickExitButton(self):
         print('exit')
         exit()
@@ -160,6 +165,10 @@ class Window(Frame):
         print(txt)
         self.output.delete('1.0', END)
         self.output.insert(END, txt)
+
+        self.result.delete('1.0', END)
+        string = 'A:'+hex(portA)+'\n'+'B:'+hex(portB)+'\n'+'C:'+hex(portC)+'\n'+'D:'+hex(portD)+'\n'
+        self.result.insert(END, 'HEX values: \n' + string)
 
 
 if __name__ == "__main__":
